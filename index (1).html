@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-wrapper {
+            width: 420px;
+            background: #16213e;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            height: 580px;
+        }
+
+        .chat-header {
+            background: #0f3460;
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .chat-header h2 {
+            color: #e94560;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .chat-header p {
+            color: #a0aec0;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        #messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #messages p {
+            background: #0f3460;
+            color: #e2e8f0;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            max-width: 85%;
+            word-break: break-word;
+        }
+
+        #messages p strong {
+            color: #e94560;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 12px;
+        }
+
+        #form {
+            display: flex;
+            padding: 12px;
+            background: #0f3460;
+            gap: 8px;
+        }
+
+        #input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 24px;
+            border: none;
+            background: #1a1a2e;
+            color: #e2e8f0;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #input::placeholder { color: #4a5568; }
+
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #c73652; }
+    </style>
+</head>
+
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-header">
+            <h2>Chat Tunnel Port 3000</h2>
+            <p>Daniel Hoyos &amp; Misael Gallo</p>
+        </div>
+        <div id="messages"></div>
+        <form id="form">
+            <input id="input" type="text" autocomplete="off" placeholder="Escribe un mensaje..." />
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <!-- Socket.io desde CDN -->
+    <script src="https://35cl9zvz-3000.use2.devtunnels.ms/socket.io/socket.io.js"></script>
+
+    <script>
+        const username = prompt('¿Cuál es tu nombre?') || 'Anónimo'
+
+        const socket = io("https://35cl9zvz-3000.use2.devtunnels.ms")
+        const input = document.getElementById('input')
+        const messages = document.getElementById('messages')
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+
+            if (input.value) {
+                socket.emit('message', {
+                    username,
+                    message: input.value
+                })
+                input.value = ''
+            }
+        })
+
+        socket.on('messages', (data) => {
+            const p = document.createElement('p')
+            p.innerHTML = `<strong>${data.username}:</strong> ${data.message}`
+            messages.appendChild(p)
+        })
+    </script>
+</body>
+</html>
