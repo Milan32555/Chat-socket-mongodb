@@ -9,8 +9,8 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/chat";
 
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("MongoDB conectado:", MONGO_URI))
-  .catch((err) => console.error("Error MongoDB:", err));
+  .then(() => console.log("MongoDB conectado"))
+  .catch(() => console.error("No se pudo conectar a MongoDB"));
 
 const messageSchema = new mongoose.Schema({
   name:      { type: String, default: "Anónimo" },

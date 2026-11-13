@@ -39,7 +39,7 @@ Real-time chat application built with Node.js, Socket.IO, and MongoDB. Designed 
 ```bash
 # Clone the repository
 git clone https://github.com/Milan32555/Chat-socket-mongodb.git
-cd arquitectura-chat
+cd Chat-socket-mongodb
 
 # Install dependencies
 npm install
@@ -88,21 +88,7 @@ The server starts on `http://localhost:3000`.
 
 ## Deployment with Dev Tunnels
 
-The frontend is pre-configured to connect through a VS Code Dev Tunnel. To use your own tunnel:
-
-1. Open the project in VS Code
-2. Forward port `3000` via **Ports** panel and set visibility to **Public**
-3. Replace the tunnel URL in `index (1).html`:
-
-```js
-// Line ~238 — update both occurrences
-const socket = io("https://<your-tunnel-url>/")
-```
-
-```html
-<!-- Line ~237 -->
-<script src="https://<your-tunnel-url>/socket.io/socket.io.js"></script>
-```
+The chat connects to Socket.IO on the same origin as the page. For local development, open `http://localhost:3000`. If you forward port `3000` through VS Code Dev Tunnels, open the forwarded URL directly.
 
 ## Message Schema
 
