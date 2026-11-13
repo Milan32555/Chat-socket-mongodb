@@ -13,8 +13,8 @@ mongoose
   .catch(() => console.error("No se pudo conectar a MongoDB"));
 
 const messageSchema = new mongoose.Schema({
-  name:      { type: String, default: "Anónimo" },
-  message:   { type: String, required: true },
+  name:      { type: String, default: "Anónimo", maxlength: 30 },
+  message:   { type: String, required: true, maxlength: 500 },
   createdAt: { type: Date,   default: Date.now },
 });
 const Message = mongoose.model("Message", messageSchema);
@@ -46,15 +46,28 @@ io.on("connection", async (socket) => {
     console.error("Error cargando historial:", e);
   }
 
-  socket.on("message", async (data) => {
+  socket.on("message", async (data, acknowledge) => {
+    const reply = typeof acknowledge === "function" ? acknowledge : () => {};
+    if (!data || typeof data.message !== "string" ||
+        (data.name !== undefined && typeof data.name !== "string")) {
+      reply({ ok: false, error: "El nombre y el mensaje deben ser texto." });
+      return;
+    }
+
+    const name = data.name?.trim() || "Anónimo";
+    const message = data.message.trim();
+    if (name.length > 30 || !message || message.length > 500) {
+      reply({ ok: false, error: "Usa hasta 30 caracteres para el nombre y entre 1 y 500 para el mensaje." });
+      return;
+    }
+
     try {
-      const msg = await Message.create({
-        name:    (data.name || "Anónimo").trim().slice(0, 30),
-        message: String(data.message).trim().slice(0, 500),
-      });
-      io.emit("messages", msg);
-    } catch (e) {
-      console.error("Error guardando mensaje:", e);
+      const saved = await Message.create({ name, message });
+      io.emit("messages", saved);
+      reply({ ok: true });
+    } catch {
+      console.error("No se pudo guardar el mensaje");
+      reply({ ok: false, error: "No se pudo guardar el mensaje." });
     }
   });
 

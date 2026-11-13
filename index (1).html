@@ -231,12 +231,16 @@
         <input id="input" type="text" placeholder="Escribe un mensaje..." autocomplete="off" maxlength="500" />
         <button type="submit">Enviar</button>
       </div>
+      <p id="sendStatus" role="status" hidden></p>
     </form>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket    = io()
+    const form      = document.getElementById('form')
+    const statusEl  = document.getElementById('sendStatus')
+    const sendButton = form.querySelector('button[type="submit"]')
     const inputEl   = document.getElementById('input')
     const nameEl    = document.getElementById('name')
     const messages  = document.getElementById('messages')
@@ -259,34 +263,40 @@
       return name.trim().slice(0,2).toUpperCase() || '??'
     }
 
-    // Escapa HTML para evitar XSS
-    function esc(str) {
-      return String(str)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    }
-
     function fmt(d) {
       return new Date(d).toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' })
     }
 
     function addMsg(data, old = false) {
       if (emptyEl) emptyEl.remove()
-      const name  = esc(data.name || 'Anónimo')
-      const text  = esc(data.message)
+      const name = data.name || 'Anónimo'
       const color = colorFor(name)
-
       const div = document.createElement('div')
-      div.className = 'msg' + (old ? ' old' : '')
-      div.innerHTML = `
-        <div class="avatar" style="background:${color}">${initials(name)}</div>
-        <div class="msg-body">
-          <div class="meta">
-            <span class="name" style="color:${color}">${name}</span>
-            <span class="time">${fmt(data.createdAt || new Date())}</span>
-          </div>
-          <div class="text">${text}</div>
-        </div>`
+      div.className = old ? 'msg old' : 'msg'
+
+      const avatar = document.createElement('div')
+      avatar.className = 'avatar'
+      avatar.style.backgroundColor = color
+      avatar.textContent = initials(name)
+
+      const body = document.createElement('div')
+      body.className = 'msg-body'
+      const meta = document.createElement('div')
+      meta.className = 'meta'
+      const author = document.createElement('span')
+      author.className = 'name'
+      author.style.color = color
+      author.textContent = name
+      const time = document.createElement('span')
+      time.className = 'time'
+      time.textContent = fmt(data.createdAt || new Date())
+      const text = document.createElement('div')
+      text.className = 'text'
+      text.textContent = data.message
+
+      meta.append(author, time)
+      body.append(meta, text)
+      div.append(avatar, body)
       messages.appendChild(div)
       messages.scrollTop = messages.scrollHeight
       totalMsgs++
@@ -312,11 +322,28 @@
       e.preventDefault()
       const text = inputEl.value.trim()
       if (!text) return
-      socket.emit('message', {
-        name:    nameEl.value.trim() || 'Anónimo',
+      if (!socket.connected) {
+        statusEl.textContent = 'No hay conexión. Intenta de nuevo cuando se restablezca.'
+        statusEl.hidden = false
+        return
+      }
+
+      sendButton.disabled = true
+      statusEl.hidden = true
+      socket.timeout(10000).emit('message', {
+        name: nameEl.value.trim() || 'Anónimo',
         message: text
+      }, (error, result) => {
+        sendButton.disabled = false
+        if (error || !result?.ok) {
+          statusEl.textContent = error
+            ? 'No se pudo confirmar el envío. Revisa el chat antes de volver a intentarlo.'
+            : result?.error || 'No se pudo enviar el mensaje.'
+          statusEl.hidden = false
+          return
+        }
+        if (inputEl.value.trim() === text) inputEl.value = ''
       })
-      inputEl.value = ''
     })
   </script>
 </body>
