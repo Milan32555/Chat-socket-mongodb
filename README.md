@@ -13,7 +13,7 @@ Real-time chat application built with Node.js, Socket.IO, and MongoDB. Designed 
 - **Persistent history** — last 60 messages loaded on connect (MongoDB)
 - **Live user count** — online badge updates as users join/leave
 - **Color-coded avatars** — consistent color per username across sessions
-- **XSS-safe** — all user input escaped before rendering
+- **Plain-text messages** — names and messages are rendered as text to prevent HTML injection
 - **Responsive dark UI** — works on desktop and mobile
 
 ## Tech Stack
@@ -31,7 +31,7 @@ Real-time chat application built with Node.js, Socket.IO, and MongoDB. Designed 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or higher
+- [Node.js](https://nodejs.org/) v22 or higher
 - [MongoDB](https://www.mongodb.com/) instance (local or Atlas)
 
 ### Installation
@@ -42,7 +42,7 @@ git clone https://github.com/Milan32555/Chat-socket-mongodb.git
 cd Chat-socket-mongodb
 
 # Install dependencies
-npm install
+npm ci
 ```
 
 ### Environment Variables
@@ -99,6 +99,12 @@ The chat connects to Socket.IO on the same origin as the page. For local develop
   createdAt: Date      // auto-generated
 }
 ```
+
+## Tests
+
+Run `npm test` with MongoDB available locally on port 27017. Set `CHAT_TEST_MONGO_URI` to use a different test instance. The integration test creates and removes an isolated database.
+
+The tests cover the latest 60 messages in chronological order, rejection of invalid messages, real-time delivery to a second client, and plain-text rendering of HTML payloads.
 
 ## License
 
