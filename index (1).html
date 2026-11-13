@@ -247,7 +247,9 @@
     const countEl   = document.getElementById('msgCount')
     const onlineEl  = document.getElementById('onlineCount')
     const emptyEl   = document.getElementById('emptyState')
-    let   totalMsgs = 0
+    let totalMsgs = 0
+    let waitingForHistory = true
+    const pendingMessages = []
 
     // Paleta de colores para avatares (por nombre)
     const COLORS = [
@@ -303,7 +305,15 @@
       countEl.textContent = `${totalMsgs} mensaje${totalMsgs !== 1 ? 's' : ''}`
     }
 
+    socket.on('disconnect', () => {
+      waitingForHistory = true
+      pendingMessages.length = 0
+    })
+
     socket.on('history', (history) => {
+      messages.replaceChildren(emptyEl)
+      totalMsgs = 0
+      countEl.textContent = '0 mensajes'
       history.forEach(m => addMsg(m, true))
       if (history.length) {
         const hr = document.createElement('div')
@@ -312,9 +322,18 @@
         messages.appendChild(hr)
         messages.scrollTop = messages.scrollHeight
       }
+      const historyIds = new Set(history.map(message => message._id))
+      for (const message of pendingMessages) {
+        if (!historyIds.has(message._id)) addMsg(message)
+      }
+      pendingMessages.length = 0
+      waitingForHistory = false
     })
 
-    socket.on('messages', (data) => addMsg(data, false))
+    socket.on('messages', (data) => {
+      if (waitingForHistory) pendingMessages.push(data)
+      else addMsg(data)
+    })
 
     socket.on('online', (n) => { onlineEl.textContent = n })
 

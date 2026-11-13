@@ -35,17 +35,6 @@ io.on("connection", async (socket) => {
   online++;
   io.emit("online", online);
 
-  // historial: últimos 60 mensajes en orden cronológico
-  try {
-    const history = await Message.find()
-      .sort({ createdAt: 1 })
-      .limit(60)
-      .lean();
-    socket.emit("history", history);
-  } catch (e) {
-    console.error("Error cargando historial:", e);
-  }
-
   socket.on("message", async (data, acknowledge) => {
     const reply = typeof acknowledge === "function" ? acknowledge : () => {};
     if (!data || typeof data.message !== "string" ||
@@ -75,7 +64,19 @@ io.on("connection", async (socket) => {
     online--;
     io.emit("online", online);
   });
+
+  try {
+    const history = await Message.find()
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(60)
+      .lean();
+    socket.emit("history", history.reverse());
+  } catch {
+    console.error("No se pudo cargar el historial");
+    socket.emit("history", []);
+  }
 });
 
 // ── Inicio ───────────────────────────────────────────────────────────────────
-http.listen(3000, () => console.log("Servidor en :3000"));
+const port = process.env.PORT || 3000;
+http.listen(port, () => console.log("Servidor en :" + http.address().port));
